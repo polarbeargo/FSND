@@ -6,6 +6,7 @@ from projects.capstone.heroku_sample.auth import AuthError, requires_auth
 
 ACTORS_PER_PAGE = 10
 
+
 def create_app(test_config=None):
 
     app = Flask(__name__)
@@ -36,7 +37,7 @@ def create_app(test_config=None):
             current_movie = Movie.query.order_by(
                 Movie.id).paginate(
                 page=1, per_page=ACTORS_PER_PAGE).items
-             
+
             if len(current_movie) == 0:
                 abort(404)
 
@@ -75,7 +76,7 @@ def create_app(test_config=None):
                 'success': True,
                 'actor': movie.id
             })
-        
+
         except Exception as e:
             print(e)
             abort(422)
@@ -90,7 +91,7 @@ def create_app(test_config=None):
 
         title = body.get('title')
         date = body.get('release_date')
-        
+
         if date is None or title is None:
             abort(422)
 
@@ -129,7 +130,7 @@ def create_app(test_config=None):
         except Exception as e:
             print(e)
             abort(422)
-    
+
     @app.route('/actors', methods=['GET'])
     @requires_auth('get:actors')
     def get_actors(payload):
@@ -139,7 +140,7 @@ def create_app(test_config=None):
             current_actors = Actor.query.order_by(
                 Actor.id).paginate(
                 page=1, per_page=ACTORS_PER_PAGE).items
-             
+
             if len(current_actors) == 0:
                 abort(404)
 
@@ -153,7 +154,6 @@ def create_app(test_config=None):
             print(e)
             abort(422)
 
-  
     @app.route('/actors/<int:id>', methods=['DELETE'])
     @requires_auth(permission='delete:actors')
     def delete_actor(payload, id):
@@ -206,7 +206,6 @@ def create_app(test_config=None):
             print(e)
             abort(422)
 
-
     @app.route('/actors/<int:id>', methods=['PATCH'])
     @requires_auth(permission='patch:actors')
     def update_actor(payload, id):
@@ -235,11 +234,11 @@ def create_app(test_config=None):
                 'success': True,
                 'actor': actor.id
             })
-        
+
         except Exception as e:
             print(e)
             abort(422)
-        
+
     """
     @TODO:
     Create error handlers for all expected errors
@@ -270,6 +269,7 @@ def create_app(test_config=None):
         }), 422
 
     return app
+
 
 app = create_app()
 
