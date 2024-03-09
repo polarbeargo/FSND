@@ -5,11 +5,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 from app import create_app
 from models import setup_db, Actor, Movie
-from dotenv import load_dotenv
 
-DB_HOST = os.getenv('DB_HOST')
-TEST_DB_NAME = os.getenv('DB_TEST_NAME')
-
+TEST_DB_NAME = os.getenv('TEST_DB_URL')
 
 class CapstoneTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
@@ -18,7 +15,7 @@ class CapstoneTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_path = "postgres://{}/{}".format(DB_HOST, TEST_DB_NAME)
+        self.database_path = TEST_DB_NAME
         setup_db(self.app, self.database_path)
 
         # binds the app to the current context
