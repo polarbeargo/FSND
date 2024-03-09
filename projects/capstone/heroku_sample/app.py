@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify, abort
 from models import setup_db, db_drop_and_create_all, setup_db, Actor, Movie
 from flask_cors import CORS
-from projects.capstone.heroku_sample.auth import AuthError, requires_auth
+from auth import AuthError, requires_auth
 
 ACTORS_PER_PAGE = 10
 
