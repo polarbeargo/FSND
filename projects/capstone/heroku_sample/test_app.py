@@ -16,6 +16,9 @@ class CapstoneTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_path = TEST_DB_NAME
+          # Define tokens for testing
+        self.actors_token = os.getenv('ACTORS_TOKEN')
+        self.movies_token = os.getenv('MOVIES_TOKEN')
         setup_db(self.app, self.database_path)
 
         # binds the app to the current context
@@ -24,7 +27,7 @@ class CapstoneTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
-
+  
     def tearDown(self):
         """Executed after reach test"""
         pass
@@ -35,28 +38,32 @@ class CapstoneTestCase(unittest.TestCase):
     """
 
     def test_get_movie(self):
-        res = self.client().get('/movies')
+        res = self.client().get('/movies', headers={'Authorization':
+                                         self.movies_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['movies'])
 
     def test_get_actor(self):
-        res = self.client().get('/actors?page=1')
+        res = self.client().get('/actors?page=1', headers={'Authorization':
+                                         self.actors_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['actors'])
 
     def test_404_get_actors(self):
-        res = self.client().get('/actors?page=1000')
+        res = self.client().get('/actors?page=1000', headers={'Authorization':
+                                         self.actors_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
 
     def test_delete_actor(self):
-        res = self.client().delete('/actors/10')
+        res = self.client().delete('/actors/10', headers={'Authorization':
+                                         self.actors_token})
         data = json.loads(res.data)
 
         question = Actor.query.filter(Actor.id == 10).one_or_none()
@@ -67,21 +74,24 @@ class CapstoneTestCase(unittest.TestCase):
         self.assertEqual(question, None)
 
     def test_404_delete_movie(self):
-        res = self.client().delete('/movies/1000')
+        res = self.client().delete('/movies/1000', headers={'Authorization':
+                                         self.movies_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
 
     def test_create_movie(self):
-        res = self.client().post('/movies', json={
+        res = self.client().post('/movies', headers={'Authorization':
+                                         self.movies_token}, json={
             'title': 'Test title',
             'release_date': '2021-01-01'
         })
         
 
     def test_422_create_movie(self):
-       res = self.client().post('/movies', json={
+       res = self.client().post('/movies',headers={'Authorization':
+                                         self.movies_token}, json={
            'title': 'Test title'
        })
        data = json.loads(res.data)
@@ -89,7 +99,8 @@ class CapstoneTestCase(unittest.TestCase):
        self.assertEqual(data['success'], False)
        
     def test_422_create_actor(self):
-         res = self.client().post('/actors', json={
+         res = self.client().post('/actors', headers={'Authorization':
+                                         self.actors_token}, json={
               'name': 'Test name'
          })
          data = json.loads(res.data)
@@ -97,14 +108,16 @@ class CapstoneTestCase(unittest.TestCase):
          self.assertEqual(data['success'], False)
 
     def test_404_delete_actor(self):
-        res = self.client().delete('/actors/1000')
+        res = self.client().delete('/actors/1000',headers={'Authorization':
+                                         self.actor_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
 
     def test_create_actor(self):
-        res = self.client().post('/actors', json={
+        res = self.client().post('/actors', headers={'Authorization':
+                                         self.actor_token}, json={
             'name': 'Test name',
             'age': '20',
             'gender': 'M'
