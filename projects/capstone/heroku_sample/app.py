@@ -267,6 +267,14 @@ def create_app(test_config=None):
             'error': 422,
             'message': 'Unprocessable'
         }), 422
+    
+    @app.errorhandler(AuthError)
+    def authorization_error(error):
+        return jsonify({
+            'success': False,
+            'error': error.status_code,
+            'message': error.error['description']
+        }), error.status_code
 
     return app
 
