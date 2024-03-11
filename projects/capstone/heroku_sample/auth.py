@@ -201,6 +201,8 @@ def requires_auth(permission=''):
                 payload = verify_decode_jwt(token)
             except BaseException:
                 abort(401)
+            print("PAYLOAD PERMISSION: " + ' '.join(str(item) for item in payload['permissions']))
+            print("PERMISSION: " + permission)
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
 
