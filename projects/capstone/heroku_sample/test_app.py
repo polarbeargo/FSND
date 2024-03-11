@@ -109,7 +109,7 @@ class CapstoneTestCase(unittest.TestCase):
 
     def test_404_delete_actor(self):
         res = self.client().delete('/actors/1000',headers={'Authorization':
-                                         self.actor_token})
+                                         self.actors_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
@@ -117,7 +117,7 @@ class CapstoneTestCase(unittest.TestCase):
 
     def test_create_actor(self):
         res = self.client().post('/actors', headers={'Authorization':
-                                         self.actor_token}, json={
+                                         self.actors_token}, json={
             'name': 'Test name',
             'age': '20',
             'gender': 'M'
