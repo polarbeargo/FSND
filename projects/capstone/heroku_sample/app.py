@@ -68,7 +68,7 @@ def create_app(test_config=None):
             if 'title' in body:
                 movie.title = body.get('title')
 
-            if 'age' in body:
+            if 'release_date' in body:
                 movie.release_date = body.get('release_date')
 
             movie.update()
