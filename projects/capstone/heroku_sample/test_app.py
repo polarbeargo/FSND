@@ -37,7 +37,15 @@ class CapstoneTestCase(unittest.TestCase):
     TODO
     Write at least one test for each test for successful operation and for expected errors.
     """
-
+    def test_create_movie(self):
+        res = self.client().post('/movies', json={
+            'title': 'Test title',
+            'release_date': '2021-01-01'
+        }, headers={'Authorization': self.movies_token})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+        
     def test_get_movie(self):
         res = self.client().get('/movies', headers={'Authorization':
                                                     self.movies_token})
