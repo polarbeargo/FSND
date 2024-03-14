@@ -1,5 +1,11 @@
 import os
-from flask import Flask, request, jsonify, abort
+import sys
+from flask import (
+  Flask,
+  request,
+  abort,
+  jsonify
+)
 from models import setup_db, db_drop_and_create_all, setup_db, Actor, Movie
 from flask_cors import CORS
 from auth import AuthError, requires_auth
@@ -23,6 +29,14 @@ def create_app(test_config=None):
             'GET, POST, PATCH, DELETE, OPTIONS')
         return response
 
+    @app.route('/')
+    def index():
+        return jsonify({
+            'message': 'Welcome to the Capstone project: Casting Agency',
+            'author': 'Hsin-Wen Chang',
+            'date': '2023-03-14'
+        })
+    
     """
     @TODO:
     Create an endpoint to handle GET requests
@@ -48,7 +62,7 @@ def create_app(test_config=None):
             })
 
         except Exception as e:
-            print(e)
+            print(sys.exc_info())
             abort(422)
 
     @app.route('/movies/<int:id>', methods=['PATCH'])
@@ -84,6 +98,9 @@ def create_app(test_config=None):
     @app.route('/movies', methods=['POST'])
     @requires_auth('post:movies')
     def add_movie(payload):
+        '''
+        Add a new movie to the database
+        '''
         body = request.get_json()
 
         if body is None:
