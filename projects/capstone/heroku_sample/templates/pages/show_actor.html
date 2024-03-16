@@ -1,0 +1,22 @@
+{% extends 'layouts/main.html' %}
+{% block title %}{{ actor.name }} | Artist{% endblock %}
+{% block content %}
+<div class="row">
+	<div class="col-sm-6">
+		<h1 class="monospace">
+			{{ actor.name }}
+		</h1>
+		<p class="subtitle">
+			ID: {{ actor.id }}
+		</p>
+		<div class="genres">
+			<span class="genre">{{ actor.age }}</span> <span class="genre">{{ actor.gender }}</span>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<button><a href="/actors/{{actor.id}}/patch">Edit Actor</a></button> </button> <button><a href="/actors/{{ actor.id }}/delete">Delete Actor</a></button>
+</div>
+</section>
+{% endblock %}
+
