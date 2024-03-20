@@ -218,9 +218,9 @@ def create_app(test_config=None):
 
         try:
             actor = Actor(
-                gender=request.form.gender,
-                name=request.form.name,
-                age=request.form.age)
+                gender=request.form['gender'],
+                name=request.form['name'],
+                age=request.form['age'])
             actor.insert()
 
         except Exception as e:
