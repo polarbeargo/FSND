@@ -6,19 +6,33 @@ from flask import (
     request,
     abort,
     render_template,
+    flash,
+    session,
+    redirect,
+    url_for,
     jsonify
 )
 from models import setup_db, db_drop_and_create_all, setup_db, Actor, Movie
 from flask_cors import CORS, cross_origin
 from auth import AuthError, requires_auth
+from authlib.integrations.flask_client import OAuth
+from urllib.parse import urlencode
 from forms import ActorForm, MovieForm
 
 ACTORS_PER_PAGE = 10
+
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_BASE_URL = os.getenv('AUTH0_BASE_URL')
+API_AUDIENCE = os.getenv('API_AUDIENCE')
+AUTH0_CALLBACK_URL = os.getenv('AUTH0_CALLBACK_URL')
+AUTH0_CLIENT_ID = os.getenv('AUTH0_CLIENT_ID')
+AUTH0_CLIENT_SECRET = os.getenv('AUTH0_CLIENT_SECRET')
 
 
 def create_app(test_config=None):
 
     app = Flask(__name__)
+
     setup_db(app)
     CORS(app)
 
@@ -67,19 +81,19 @@ def create_app(test_config=None):
             abort(422)
 
     # hadle rout to create new movie from form
-    @app.route('/movies', methods=['GET'])
+    @app.route('/movies/create', methods=['GET'])
     @cross_origin()
     @requires_auth(permission='post:movies')
     def create_movie_form(payload):
         form = MovieForm()
         return render_template('forms/new_movie.html', form=form)
 
-    @app.route('/movies/<int:id>', methods=['PATCH'])
+    @app.route('/movies/<int:movie_id>', methods=['PATCH'])
     @cross_origin()
     @requires_auth(permission='patch:movies')
-    def update_movie(payload, id):
+    def update_movie(payload, movie_id):
         form = MovieForm()
-        movie = form.query.filter(Movie.id == id).one_or_none()
+        movie = form.query.filter(Movie.id == movie_id).one_or_none()
 
         if movie is None:
             return json.dumps({
@@ -129,13 +143,13 @@ def create_app(test_config=None):
             print(e)
             abort(422)
 
-    @app.route('/movies/<int:id>', methods=['DELETE'])
+    @app.route('/movies/<int:movie_id>', methods=['DELETE'])
     @cross_origin()
     @requires_auth(permission='delete:movies')
-    def delete_movie(payload, id):
+    def delete_movie(payload, movie_id):
         try:
             movie = Movie.query.filter(
-                Movie.id == id).one_or_none()
+                Movie.id == movie_id).one_or_none()
 
             if movie is None:
                 abort(404)
@@ -144,7 +158,7 @@ def create_app(test_config=None):
 
             return jsonify({
                 'success': True,
-                'deleted': id
+                'deleted': movie_id
             })
 
         except Exception as e:
@@ -166,22 +180,22 @@ def create_app(test_config=None):
             })
 
         return render_template('pages/actors.html', actors=actors_data)
-    
+
     # hadle rout to create new actor from form
-    @app.route('/actors', methods=['GET'])
+    @app.route('/actors/create', methods=['GET'])
     @cross_origin()
     @requires_auth(permission='post:actors')
     def create_actor_form(payload):
         form = ActorForm()
         return render_template('forms/new_actor.html', form=form)
 
-    @app.route('/actors/<int:id>', methods=['DELETE'])
+    @app.route('/actors/<int:actor_id>', methods=['DELETE'])
     @cross_origin()
     @requires_auth(permission='delete:actors')
-    def delete_actor(payload, id):
+    def delete_actor(payload, actor_id):
         try:
             actor = Actor.query.filter(
-                Actor.id == id).one_or_none()
+                Actor.id == actor_id).one_or_none()
 
             if actor is None:
                 return json.dumps({
@@ -197,43 +211,29 @@ def create_app(test_config=None):
             print(e)
             abort(422)
 
-    @app.route('/actors', methods=['POST'])
+    @app.route('/actors/create', methods=['POST'])
     @cross_origin()
     @requires_auth('post:actors')
     def add_actor(payload):
-        body = request.get_json()
-
-        if body is None:
-            abort(400)
-
-        gender = body.get('gender')
-        name = body.get('name')
-        age = body.get('age')
-
-        if name is None or name is None or gender is None or age is None:
-            abort(422)
 
         try:
             actor = Actor(
-                gender=gender,
-                name=name,
-                age=age)
+                gender=request.form.gender,
+                name=request.form.name,
+                age=request.form.age)
             actor.insert()
-
-            return jsonify({
-                'success': True,
-                'created': actor.id
-            })
 
         except Exception as e:
             print(e)
             abort(422)
 
-    @app.route('/actors/<int:id>', methods=['PATCH'])
+        return render_template('pages/home.html')
+
+    @app.route('/actors/<int:actor_id>', methods=['PATCH'])
     @cross_origin()
     @requires_auth(permission='patch:actors')
-    def update_actor(payload, id):
-        actor = Actor.query.filter(Actor.id == id).one_or_none()
+    def update_actor(payload, actor_id):
+        actor = Actor.query.filter(Actor.id == actor_id).one_or_none()
 
         if actor is None:
             abort(404)
@@ -288,6 +288,53 @@ def create_app(test_config=None):
 
 
 app = create_app()
+oauth = OAuth(app)
+
+auth0 = oauth.register(
+    'auth0',
+    client_id=AUTH0_CLIENT_ID,
+    client_secret=AUTH0_CLIENT_SECRET,
+    api_base_url=AUTH0_BASE_URL,
+    access_token_url='https://dev-2rphxhqkvfsgcgle.us.auth0.com' +
+    '/oauth/token',
+    authorize_url='https://dev-2rphxhqkvfsgcgle.us.auth0.com' +
+    '/authorize',
+    client_kwargs={
+        'scope': 'openid profile email'})
+
+
+@app.route('/login', methods=['GET'])
+@cross_origin()
+def login():
+    print('Audience: {}'.format(API_AUDIENCE))
+    return auth0.authorize_redirect(
+        redirect_uri='%s/post-login' % AUTH0_CALLBACK_URL,
+        audience=API_AUDIENCE
+    )
+
+
+@app.route('/post-login', methods=['GET'])
+@cross_origin()
+def post_login():
+    token = auth0.authorize_access_token()
+    session['token'] = token['access_token']
+    print(session['token'])
+    return render_template('pages/home.html')
+
+
+@app.route('/logout')
+def log_out():
+    session.clear()
+    params = {
+        'returnTo': url_for(
+            'index',
+            _external=True),
+        'client_id': AUTH0_CLIENT_ID}
+    return redirect(
+        'https://dev-2rphxhqkvfsgcgle.us.auth0.com' +
+        '/v2/logout?' +
+        urlencode(params))
+
 
 if __name__ == '__main__':
     app.run()
