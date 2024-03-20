@@ -1,18 +1,15 @@
 {% extends 'layouts/main.html' %}
 {% block title %}Fyyur | Movies{% endblock %}
 {% block content %}
-{% for movie in movies %}
-<h3>{{ movie.release_date }}</h3>
-	<ul class="items">
-	{% for movie in movie.movie_data %}
+<ul class="items">
+	{% for movie in movies %}
 	<li>
 		<a href="/movies/{{ movie.id }}">
-			<i class="fas fa-music"></i>
 			<div class="item">
-				<h5>{{ movie.title }}</h5>
-				{% for actor in movie.cast %}
-				<h9>{{ actor.name }}</h9> &nbsp; &nbsp;
-		{% endfor %}
-	</ul>
-{% endfor %}
+				<h4>{{ movie.name }}</h4>
+			</div>
+		</a>
+	</li>
+	{% endfor %}
+</ul>
 {% endblock %}
