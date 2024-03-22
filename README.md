@@ -24,8 +24,10 @@ pip3 install -r requirements.txt
     - [Flask](http://flask.pocoo.org/) is a lightweight backend microservices framework. Flask is required to handle requests and responses.
 
     - [SQLAlchemy](https://www.sqlalchemy.org/) is the Python SQL toolkit and ORM we'll use to handle the lightweight SQL database. You'll primarily work in `app.py`and can reference `models.py`.
+    - [PostgreSQL](https://www.postgresql.org/) is the database used in the project.
 
     - [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/#) is the extension we'll use to handle cross-origin requests from our frontend server.
+    - [Auth0](https://auth0.com/) is the authentication and authorization platform used in the project.
 
 - Set up the environment variables
 ```
@@ -76,7 +78,7 @@ python3 test_app.py
 
 # API Reference
 
-### Roles and Permissions
+### Roles:
 - Casting Assistant
     - Can view actors and movies
 - Casting Director
@@ -84,9 +86,25 @@ python3 test_app.py
     - Add or delete an actor from the database
     - Modify actors or movies
 
+### Permissions:
+- `get:actors`
+- `post:actors`
+- `patch:actors`
+- `delete:actors`
+- `get:movies`
+- `post:movies`
+- `patch:movies`
+- `delete:movies`
+
+### Set JWT Tokens
+- To get the JWT tokens, you can use the following link to create users and sign them in:
+```
+https://{{YOUR_DOMAIN}}/authorize?audience={{API_IDENTIFIER}}&response_type=token&client_id={{YOUR_CLIENT_ID}}&redirect_uri={{YOUR_CALLBACK_URI}}
+```
+
 ### Getting Started
 - Base URL: At present this app can only be run locally and is not hosted as a base URL. The backend app is hosted at the default, `http://127.0.0.1:5000/`, which is set as a proxy in the frontend configuration. 
-- Authentication: We have implemented Auth0 for authentication. The tokens are provided in the setup.sh file.
+- Authentication: We have implemented Auth0 for authentication. The tokens are provided in the [setup.sh](projects/capstone/heroku_sample/setup.sh) file.
 
 ### Error Handling
 Errors are returned as JSON objects in the following format:
@@ -97,8 +115,9 @@ Errors are returned as JSON objects in the following format:
     "message": "bad request"
 }
 ```
-The API will return three error types when requests fail:
+The API will return the following error types when requests fail:
 - 400: Bad Request
+- 401: Unauthorized
 - 404: Resource Not Found
 - 422: Not Processable 
 
@@ -108,7 +127,7 @@ The API will return three error types when requests fail:
 - Fetches a dictionary of movies in which the keys are the ids and the value is the corresponding string of the category
 - Request Arguments: None
 - Returns: An object with a single key, `movies`, that contains an object of `id: category_string` key: value pairs.
-- Sample: `curl http://127.0.0.1:5000/movies`
+- Sample: `curl -i -H "Content-Type: application/json" -H "Authorization: Bearer {INSERT_TOKEN_HERE}" http://127.0.0.1:5000/movies`
 ```json
 
 ``` 
@@ -116,7 +135,7 @@ The API will return three error types when requests fail:
 - Fetches a dictionary of actors in which the keys are the ids and the value is the corresponding string of the actors
 - Request Arguments: None
 - Returns: An object with a single key, `actors`, that contains an object of `id: category_string` key: value pairs and a list of questions.
-- Sample: `curl -X GET http://127.0.0.1:5000/actors`
+- Sample: `curl -i -H "Content-Type: application/json" -H "Authorization: Bearer {INSERT_TOKEN_HERE}" http://127.0.0.1:5000/actors`
 ```json
 
 ```
