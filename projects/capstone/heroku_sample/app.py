@@ -32,7 +32,6 @@ AUTH0_CLIENT_SECRET = os.getenv('AUTH0_CLIENT_SECRET')
 def create_app(test_config=None):
 
     app = Flask(__name__)
-
     setup_db(app)
     CORS(app)
 
@@ -49,7 +48,7 @@ def create_app(test_config=None):
     @app.route('/')
     @cross_origin()
     def index():
-        return render_template('pages/home.html')
+        return render_template('pages/home.html'), 200
 
     """
     @TODO:
@@ -83,10 +82,10 @@ def create_app(test_config=None):
     # hadle rout to create new movie from form
     @app.route('/movies/create', methods=['GET'])
     @cross_origin()
-    @requires_auth(permission='post:movies')
+    @requires_auth(permission='get:movieform')
     def create_movie_form(payload):
         form = MovieForm()
-        return render_template('forms/new_movie.html', form=form)
+        return render_template('forms/new_movie.html', form=form),200
 
     @app.route('/movies/<int:movie_id>', methods=['PATCH'])
     @cross_origin()
@@ -107,7 +106,7 @@ def create_app(test_config=None):
                 form.release_date.data = movie.release_date
 
             return render_template(
-                'forms/edit_movie.html', form=form, movie=movie)
+                'forms/edit_movie.html', form=form, movie=movie), 200
 
         except Exception as e:
             print(e)
@@ -120,46 +119,50 @@ def create_app(test_config=None):
         '''
         Add a new movie to the database
         '''
-        body = request.get_json()
-
-        if body is None:
-            abort(400)
-
-        title = body.get('title')
-        date = body.get('release_date')
-
-        if date is None or title is None:
-            abort(422)
-
+        print('Movie added successfully 1')
+        # add user-submitted data and commit to db
+        print(request.form.get('title'))
+        movie = Movie(
+            title=request.form.get('title'),
+            release_date=request.form.get('release_year')
+        )
+        print('Movie added successfully 2')
         try:
-            new_movie = Movie(
-                title=title,
-                release_date=date)
-            new_movie.insert()
+            movie.insert()
+            # print 1
+            print('Movie added successfully')
+             # On successful db insert, flash success
+            flash(request.form['title'] + ' was successfully listed!')
+        except:
+            # On unsuccessful db insert, flash an error
+            flash(
+                'Error: Movie ' +
+                request.form['title'] +
+                ' was not listed. Please check your inputs and try again :)')
+            print(sys.exc_info())
 
-            return render_template('pages/home.html')
-
-        except Exception as e:
-            print(e)
-            abort(422)
+        return render_template('pages/home.html'),200
 
     @app.route('/movies/<int:movie_id>', methods=['DELETE'])
     @cross_origin()
     @requires_auth(permission='delete:movies')
     def delete_movie(payload, movie_id):
         try:
-            movie = Movie.query.filter(
-                Movie.id == movie_id).one_or_none()
+            print('Movie ID: {}'.format(movie_id))
+            movie = Movie.query.get(movie_id)
 
             if movie is None:
-                abort(404)
+                return json.dumps({
+                    'success': False,
+                    'error': 'Movie could not be found'
+                }), 404
 
             movie.delete()
 
             return jsonify({
                 'success': True,
                 'deleted': movie_id
-            })
+            }), 200
 
         except Exception as e:
             print(e)
@@ -179,21 +182,22 @@ def create_app(test_config=None):
                 "gender": actor.gender,
             })
 
-        return render_template('pages/actors.html', actors=actors_data)
+        return render_template('pages/actors.html', actors=actors_data), 200
 
     # hadle rout to create new actor from form
     @app.route('/actors/create', methods=['GET'])
     @cross_origin()
-    @requires_auth(permission='post:actors')
+    @requires_auth(permission='pget:actorform')
     def create_actor_form(payload):
         form = ActorForm()
-        return render_template('forms/new_actor.html', form=form)
+        return render_template('forms/new_actor.html', form=form), 200
 
     @app.route('/actors/<int:actor_id>', methods=['DELETE'])
     @cross_origin()
     @requires_auth(permission='delete:actors')
     def delete_actor(payload, actor_id):
         try:
+            print('Actor ID: {}'.format(actor_id))
             actor = Actor.query.filter(
                 Actor.id == actor_id).one_or_none()
 
@@ -205,7 +209,7 @@ def create_app(test_config=None):
 
             actor.delete()
 
-            return render_template('pages/home.html')
+            return render_template('pages/home.html'), 200
 
         except Exception as e:
             print(e)
@@ -215,7 +219,8 @@ def create_app(test_config=None):
     @cross_origin()
     @requires_auth('post:actors')
     def add_actor(payload):
-
+        print('Hi actor')
+        print(request.form['name'])
         try:
             actor = Actor(
                 gender=request.form['gender'],
@@ -227,7 +232,7 @@ def create_app(test_config=None):
             print(e)
             abort(422)
 
-        return render_template('pages/home.html')
+        return render_template('pages/home.html'), 200
 
     @app.route('/actors/<int:actor_id>', methods=['PATCH'])
     @cross_origin()
@@ -257,7 +262,7 @@ def create_app(test_config=None):
             return jsonify({
                 'success': True,
                 'actor': actor.id
-            })
+            }), 200
 
         except Exception as e:
             print(e)
@@ -319,7 +324,7 @@ def post_login():
     token = auth0.authorize_access_token()
     session['token'] = token['access_token']
     print(session['token'])
-    return render_template('pages/home.html')
+    return render_template('pages/home.html'), 200
 
 
 @app.route('/logout')
