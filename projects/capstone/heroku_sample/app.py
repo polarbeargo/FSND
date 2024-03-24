@@ -27,11 +27,13 @@ API_AUDIENCE = os.getenv('API_AUDIENCE')
 AUTH0_CALLBACK_URL = os.getenv('AUTH0_CALLBACK_URL')
 AUTH0_CLIENT_ID = os.getenv('AUTH0_CLIENT_ID')
 AUTH0_CLIENT_SECRET = os.getenv('AUTH0_CLIENT_SECRET')
-
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 def create_app(test_config=None):
 
     app = Flask(__name__)
+    app.secret_key = SECRET_KEY
+    app.config['SECRET_KEY'] = SECRET_KEY
     setup_db(app)
     CORS(app)
 
@@ -121,10 +123,10 @@ def create_app(test_config=None):
         '''
         print('Movie added successfully 1')
         # add user-submitted data and commit to db
-        print(request.form.get('title'))
+        print(request.json['title'])
         movie = Movie(
-            title=request.form.get('title'),
-            release_date=request.form.get('release_year')
+            title=request.json['title'],
+            release_date=request.json['release_year']
         )
         print('Movie added successfully 2')
         try:
@@ -132,12 +134,12 @@ def create_app(test_config=None):
             # print 1
             print('Movie added successfully')
              # On successful db insert, flash success
-            flash(request.form['title'] + ' was successfully listed!')
+            flash(request.json['title'] + ' was successfully listed!')
         except:
             # On unsuccessful db insert, flash an error
             flash(
                 'Error: Movie ' +
-                request.form['title'] +
+                request.json['title'] +
                 ' was not listed. Please check your inputs and try again :)')
             print(sys.exc_info())
 
@@ -220,12 +222,12 @@ def create_app(test_config=None):
     @requires_auth('post:actors')
     def add_actor(payload):
         print('Hi actor')
-        print(request.form['name'])
+        print(request.json['name'])
         try:
             actor = Actor(
-                gender=request.form['gender'],
-                name=request.form['name'],
-                age=request.form['age'])
+                gender=request.json['gender'],
+                name=request.json['name'],
+                age=request.json['age'])
             actor.insert()
 
         except Exception as e:
