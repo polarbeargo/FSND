@@ -17,9 +17,6 @@ from flask_cors import CORS, cross_origin
 from auth import AuthError, requires_auth
 from authlib.integrations.flask_client import OAuth
 from urllib.parse import urlencode
-from forms import ActorForm, MovieForm
-
-ACTORS_PER_PAGE = 10
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_BASE_URL = os.getenv('AUTH0_BASE_URL')
@@ -28,6 +25,7 @@ AUTH0_CALLBACK_URL = os.getenv('AUTH0_CALLBACK_URL')
 AUTH0_CLIENT_ID = os.getenv('AUTH0_CLIENT_ID')
 AUTH0_CLIENT_SECRET = os.getenv('AUTH0_CLIENT_SECRET')
 SECRET_KEY = os.getenv('SECRET_KEY')
+
 
 def create_app(test_config=None):
 
@@ -50,7 +48,11 @@ def create_app(test_config=None):
     @app.route('/')
     @cross_origin()
     def index():
-        return render_template('pages/home.html'), 200
+        return jsonify({
+            'message': 'Welcome to the Capstone project: Casting Agency',
+            'author': 'Hsin-Wen Chang',
+            'date': '2023-03-14'
+        }), 200
 
     """
     @TODO:
@@ -63,52 +65,45 @@ def create_app(test_config=None):
     def get_movie(payload):
         try:
             movies = Movie.query.order_by(Movie.id).all()
-            movies_data = []
-            for movie in movies:
-                movies_data.append({
-                    'id': movie.id,
-                    'title': movie.title,
-                    'release_date': movie.release_date
-                })
+            movies_data = list(map(lambda movie: movie.format(), movies))
+
+            print('Movies: {}'.format(movies_data))
 
             if len(movies_data) == 0:
                 abort(404)
 
-            return render_template(
-                'pages/movies.html', movies=movies_data), 200
+            return jsonify({
+                'success': True,
+                'actors': movies_data,
+                'total_actors': len(movies_data)
+            })
 
         except Exception as e:
             print(sys.exc_info())
             abort(422)
 
-    # hadle rout to create new movie from form
-    @app.route('/movies/create', methods=['GET'])
-    @cross_origin()
-    @requires_auth(permission='get:movieform')
-    def create_movie_form(payload):
-        form = MovieForm()
-        return render_template('forms/new_movie.html', form=form),200
-
     @app.route('/movies/<int:movie_id>', methods=['PATCH'])
     @cross_origin()
     @requires_auth(permission='patch:movies')
     def update_movie(payload, movie_id):
-        form = MovieForm()
-        movie = form.query.filter(Movie.id == movie_id).one_or_none()
-
-        if movie is None:
-            return json.dumps({
-                'success': False,
-                'error': 'Movie could not be found to be updated',
-            }), 404
 
         try:
-            if movie:
-                form.title.data = movie.title
-                form.release_date.data = movie.release_date
+            movie = Movie.query.filter(Movie.id == movie_id).one_or_none()
 
-            return render_template(
-                'forms/edit_movie.html', form=form, movie=movie), 200
+            if movie is None:
+                abort(404)
+
+            print('Movie: {}'.format(movie))
+            movie = Movie(
+                title=request.json['title'],
+                release_date=request.json['release_year']
+            )
+            movie.update()
+
+            return jsonify({
+                'success': True,
+                'movie': movie.id
+            }), 200
 
         except Exception as e:
             print(e)
@@ -121,36 +116,29 @@ def create_app(test_config=None):
         '''
         Add a new movie to the database
         '''
-        print('Movie added successfully 1')
+
         # add user-submitted data and commit to db
-        print(request.json['title'])
         movie = Movie(
             title=request.json['title'],
             release_date=request.json['release_year']
         )
-        print('Movie added successfully 2')
+
         try:
             movie.insert()
-            # print 1
-            print('Movie added successfully')
-             # On successful db insert, flash success
-            flash(request.json['title'] + ' was successfully listed!')
-        except:
-            # On unsuccessful db insert, flash an error
-            flash(
-                'Error: Movie ' +
-                request.json['title'] +
-                ' was not listed. Please check your inputs and try again :)')
-            print(sys.exc_info())
 
-        return render_template('pages/home.html'),200
+        except BaseException:
+            abort(422)
+
+        return jsonify({
+            'success': True,
+            'movie': movie.id
+        }), 200
 
     @app.route('/movies/<int:movie_id>', methods=['DELETE'])
     @cross_origin()
     @requires_auth(permission='delete:movies')
     def delete_movie(payload, movie_id):
         try:
-            print('Movie ID: {}'.format(movie_id))
             movie = Movie.query.get(movie_id)
 
             if movie is None:
@@ -162,8 +150,9 @@ def create_app(test_config=None):
             movie.delete()
 
             return jsonify({
-                'success': True,
-                'deleted': movie_id
+                'deleted': movie_id,
+                'success': True
+
             }), 200
 
         except Exception as e:
@@ -175,24 +164,18 @@ def create_app(test_config=None):
     @requires_auth('get:actors')
     def get_actors(payload):
         actors = Actor.query.all()
-        actors_data = []
-        for actor in actors:
-            actors_data.append({
-                "id": actor.id,
-                "name": actor.name,
-                "age": actor.age,
-                "gender": actor.gender,
-            })
+        actors_data = list(map(lambda actor: actor.format(), actors))
 
-        return render_template('pages/actors.html', actors=actors_data), 200
+        # print actors
+        print('Actors: {}'.format(actors_data))
 
-    # hadle rout to create new actor from form
-    @app.route('/actors/create', methods=['GET'])
-    @cross_origin()
-    @requires_auth(permission='pget:actorform')
-    def create_actor_form(payload):
-        form = ActorForm()
-        return render_template('forms/new_actor.html', form=form), 200
+        if len(actors_data) == 0:
+            abort(404)
+
+        return jsonify({
+            "success": True,
+            "actors": actors_data
+        }), 200
 
     @app.route('/actors/<int:actor_id>', methods=['DELETE'])
     @cross_origin()
@@ -211,7 +194,10 @@ def create_app(test_config=None):
 
             actor.delete()
 
-            return render_template('pages/home.html'), 200
+            return jsonify({
+                'success': True,
+                '   deleted': actor_id
+            })
 
         except Exception as e:
             print(e)
@@ -221,8 +207,9 @@ def create_app(test_config=None):
     @cross_origin()
     @requires_auth('post:actors')
     def add_actor(payload):
-        print('Hi actor')
-        print(request.json['name'])
+
+        if request.json['name'] == '' or request.json['gender'] == '' or request.json['age'] == '':
+            abort(422)
         try:
             actor = Actor(
                 gender=request.json['gender'],
@@ -234,41 +221,10 @@ def create_app(test_config=None):
             print(e)
             abort(422)
 
-        return render_template('pages/home.html'), 200
-
-    @app.route('/actors/<int:actor_id>', methods=['PATCH'])
-    @cross_origin()
-    @requires_auth(permission='patch:actors')
-    def update_actor(payload, actor_id):
-        actor = Actor.query.filter(Actor.id == actor_id).one_or_none()
-
-        if actor is None:
-            abort(404)
-
-        body = request.get_json()
-
-        if body is None:
-            abort(422)
-
-        try:
-            if 'name' in body:
-                actor.name = body.get('name')
-
-            if 'age' in body:
-                actor.age = body.get('age')
-
-            if 'gender' in body:
-                actor.gender = body.get('gender')
-
-            actor.update()
-            return jsonify({
-                'success': True,
-                'actor': actor.id
-            }), 200
-
-        except Exception as e:
-            print(e)
-            abort(422)
+        return jsonify({
+            "success": True,
+            "created_actor_id": actor.id
+        }), 200
 
     """
     @TODO:
@@ -277,19 +233,35 @@ def create_app(test_config=None):
     """
     @app.errorhandler(400)
     def bad_request(error):
-        return render_template('errors/400.html'), 400
+        return jsonify({
+            'success': False,
+            'error': 400,
+            'message': 'Bad request'
+        }), 400
 
     @app.errorhandler(404)
     def not_found(error):
-        return render_template('errors/404.html'), 404
+        return jsonify({
+            'success': False,
+            'error': 404,
+            'message': 'Not found'
+        }), 404
 
     @app.errorhandler(422)
     def unprocessable(error):
-        return render_template('errors/422.html'), 422
+        return jsonify({
+            'success': False,
+            'error': 422,
+            'message': 'Unprocessable'
+        }), 422
 
     @app.errorhandler(AuthError)
     def authorization_error(error):
-        return render_template('errors/401.html'), 401
+        return jsonify({
+            'success': False,
+            'error': error.status_code,
+            'message': error.error['description']
+        }), error.status_code
 
     return app
 
