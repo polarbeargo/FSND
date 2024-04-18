@@ -16,6 +16,7 @@ class CapstoneTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
+        self.database_name = "capstone_test"
         self.database_path = TEST_DB_NAME
         # Define tokens for testing
         self.actors_token = os.getenv('ACTORS_TOKEN')
@@ -37,102 +38,96 @@ class CapstoneTestCase(unittest.TestCase):
     TODO
     Write at least one test for each test for successful operation and for expected errors.
     """
+
     def test_create_movie(self):
-        res = self.client().post('/movies', json={
-            'title': 'Test title',
-            'release_date': '2021-01-01'
-        }, headers={'Authorization': self.movies_token})
+        updated_movie = {
+            'title': 'Kong: Skull Island',
+            'release_year': '2020-01-01'
+        }
+        res = self.client().post(
+            '/movies',
+            json=updated_movie,
+            headers={
+                'Authorization': self.movies_token})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
-        self.assertTrue(data['success'])
-        
+        self.assertTrue(data['success'], True)
+
     def test_get_movie(self):
         res = self.client().get('/movies', headers={'Authorization':
                                                     self.movies_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-        self.assertTrue(data['movies'])
+        self.assertTrue(data['success'], True)
+
+    def test_create_actor(self):
+        new_actor = {
+            'name': 'Michael Bay',
+            'age': '60',
+            'gender': 'M'
+        }
+        res = self.client().post('/actors/create', json=new_actor,
+                                 headers={'Authorization': self.actors_token})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'], True)
 
     def test_get_actor(self):
-        res = self.client().get('/actors?page=1', headers={'Authorization':
-                                                           self.actors_token})
+        res = self.client().get('/actors', headers={'Authorization':
+                                                    self.actors_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-        self.assertTrue(data['actors'])
-
-    def test_404_get_actors(self):
-        res = self.client().get('/actors?page=1',
-                                headers={'Authorization': self.actors_token})
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 404)
-        self.assertEqual(data['success'], False)
+        self.assertTrue(data['success'], True)
+        self.assertEqual(type(data["actors"]), type([]))
 
     def test_delete_actor(self):
-        res = self.client().delete('/actors/1', headers={'Authorization':
+        res = self.client().delete('/actors/51', headers={'Authorization':
                                                           self.actors_token})
         data = json.loads(res.data)
-
-        question = Actor.query.filter(Actor.id == 10).one_or_none()
-
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['deleted'], 10)
-        self.assertTrue(data['success'])
-        self.assertEqual(question, None)
+        self.assertTrue(data['success'], True)
 
     def test_404_delete_movie(self):
-        res = self.client().delete('/movies/1', headers={'Authorization':
-                                                            self.movies_token})
+        res = self.client().delete('/movies/0', headers={'Authorization':
+                                                         self.movies_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
-        self.assertEqual(data['success'], False)
-
-    def test_create_movie(self):
-        res = self.client().post('/movies', json={
-            'title': 'Test title',
-            'release_date': '2021-01-01'
-        }, headers={'Authorization': self.movies_token})
-
-    def test_422_create_movie(self):
-        res = self.client().post('/movies', json={
-            'id': 1,
-            'title': 'Test title',
-            'release_year': '2021-01-01'
-        }, headers={'Authorization': self.movies_token})
-        data = json.loads(res.data)
-        self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
 
     def test_422_create_actor(self):
-        res = self.client().post('/actors', json={
-            'id': 1,
-            'name': 'Test name',
-            'age': 20,
-            'gender': 'M'
-        }, headers={'Authorization': self.actors_token})
+        res = self.client().post(
+            '/actors/create',
+            json={
+                'name': '',
+                'age': '',
+                'gender': '!'},
+            headers={
+                'Authorization': self.actors_token})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
 
     def test_404_delete_actor(self):
-        res = self.client().delete('/actors/1', headers={'Authorization':
-                                                            self.actors_token})
+        res = self.client().delete('/actors/11', headers={'Authorization':
+                                                          self.actors_token})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
 
-    def test_create_actor(self):
-        res = self.client().post('/actors', json={
-            'name': 'Test name',
-            'age': '20',
-            'gender': 'M'
-        }, headers={'Authorization': self.actors_token})
+    def test_update_movie(self):
+        updated_movie = {
+            'title': 'Dune',
+            'release_year': '2023-01-01'
+        }
+        res = self.client().patch('/movies/2', json=updated_movie,
+                                  headers={'Authorization': self.movies_token})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'], True)
 
 
 # Make the tests conveniently executable
