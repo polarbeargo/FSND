@@ -83,7 +83,7 @@ class CapstoneTestCase(unittest.TestCase):
         self.assertEqual(type(data["actors"]), type([]))
 
     def test_delete_actor(self):
-        res = self.client().delete('/actors/51', headers={'Authorization':
+        res = self.client().delete('/actors/14', headers={'Authorization':
                                                           self.actors_token})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
