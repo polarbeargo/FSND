@@ -74,8 +74,8 @@ def create_app(test_config=None):
 
             return jsonify({
                 'success': True,
-                'actors': movies_data,
-                'total_actors': len(movies_data)
+                'movies': movies_data,
+                'total_movies': len(movies_data)
             })
 
         except Exception as e:
