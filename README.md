@@ -1,6 +1,6 @@
 # Full Stack Web Developer Nanodegree Capstone
 
-This is the capstone project for the Udacity Full Stack Web Developer Nanodegree. The project is a simple casting agency that allows users to view, create, update, and delete actors and movies. The project is hosted on Heroku and can be accessed [here](https://fsnd-capstone-udacity.herokuapp.com/).
+This is the capstone project for the Udacity Full Stack Web Developer Nanodegree. The project is a simple casting agency that allows users to view, create, update, and delete actors and movies. The project is hosted on Render and can be accessed [here](https://cd0044-full-stack-web-developer.onrender.com/).
 
 ## Environment Setup
 
@@ -15,7 +15,7 @@ source venv/bin/activate
 > venv\Scripts\activate
 ```
 
-- **Install dependencies**<br> - In the heroku_sample folder run
+- **Install dependencies**<br> - Once we have our virtual environment setup and running, install dependencies by running:
 
 ```bash 
 pip3 install -r requirements.txt
@@ -23,10 +23,9 @@ pip3 install -r requirements.txt
 - The following are the key dependencies used in the project:
     - [Flask](http://flask.pocoo.org/) is a lightweight backend microservices framework. Flask is required to handle requests and responses.
 
-    - [SQLAlchemy](https://www.sqlalchemy.org/) is the Python SQL toolkit and ORM we'll use to handle the lightweight SQL database. You'll primarily work in `app.py`and can reference `models.py`.
+    - [SQLAlchemy](https://www.sqlalchemy.org/) is the Python SQL toolkit and ORM we'll use to handle the lightweight SQL database. We'll primarily work in `app.py`and can reference `models.py`.
     - [PostgreSQL](https://www.postgresql.org/) is the database used in the project.
 
-    - [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/#) is the extension we'll use to handle cross-origin requests from our frontend server.
     - [Auth0](https://auth0.com/) is the authentication and authorization platform used in the project.
 
 - Set up the environment variables
@@ -67,8 +66,6 @@ flask run --reload
 
 ### Running the tests
 
-- From the heroku_sample folder run
-
 ```bash
 dropdb capstone_test
 createdb capstone_test
@@ -79,17 +76,14 @@ python3 test_app.py
 # API Reference
 
 ### Roles:
-- Casting Assistant
-    - Can view actors and movies
+- Film Assistant
+    - Can delete, get and patch movies.
 - Casting Director
-    - All permissions a Casting Assistant has and…
-    - Add or delete an actor from the database
-    - Modify actors or movies
+    - All permissions a film Assistant has and can modify actors or movies.
 
 ### Permissions:
 - `get:actors`
 - `post:actors`
-- `patch:actors`
 - `delete:actors`
 - `get:movies`
 - `post:movies`
@@ -97,13 +91,17 @@ python3 test_app.py
 - `delete:movies`
 
 ### Set JWT Tokens
-- To get the JWT tokens, you can use the following link to create users and sign them in:
+- To get the JWT tokens, we can use the following link to create users and sign them in:
 ```
 https://{{YOUR_DOMAIN}}/authorize?audience={{API_IDENTIFIER}}&response_type=token&client_id={{YOUR_CLIENT_ID}}&redirect_uri={{YOUR_CALLBACK_URI}}
+
+Example:
+https://dev-2rphxhqkvfsgcgle.us.auth0.com/authorize?audience=capstone&response_type=token&client_id=p7kqMKdpURBhQHUYQyGDhtUfc2Z9Q4Jz
+&redirect_uri=https://cd0044-full-stack-web-developer.onrender.com/
 ```
 
 ### Getting Started
-- Base URL: At present this app can only be run locally and is not hosted as a base URL. The backend app is hosted at the default, `http://127.0.0.1:5000/`, which is set as a proxy in the frontend configuration. 
+- Base URL: At present this app can only be run locally and is not hosted as a base URL. The backend app is hosted at the default, `http://127.0.0.1:5000/`. 
 - Authentication: We have implemented Auth0 for authentication. The tokens are provided in the [setup.sh](projects/capstone/heroku_sample/setup.sh) file.
 
 ### Error Handling
@@ -124,60 +122,83 @@ The API will return the following error types when requests fail:
 ### Endpoints 
 #### GET /movies
 
-- Fetches a dictionary of movies in which the keys are the ids and the value is the corresponding string of the category
-- Request Arguments: None
-- Returns: An object with a single key, `movies`, that contains an object of `id: category_string` key: value pairs.
-- Sample: `curl -i -H "Content-Type: application/json" -H "Authorization: Bearer {INSERT_TOKEN_HERE}" http://127.0.0.1:5000/movies`
+- Fetches a dictionary of movies.
+- Returns: An object with a single key, `movies`, that contains a list of movies and a success value.
+- Sample: `curl -X GET -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/movies -H "Authorization: $MOVIES_TOKEN"`
 ```json
+{"movies":[
+    {"id":1,"release_year":"2020-01-01","title":"Kong Skull Island"},
+    {"id":2,"release_year":"2024-01-01","title":"Dune 2"},
+    {"id":3,"release_year":"2024-03-29","title":"Kung Fu Panda"}],
+    "success":true,
+    "total_movies":3    
+}
 
 ``` 
 #### GET /actors
-- Fetches a dictionary of actors in which the keys are the ids and the value is the corresponding string of the actors
-- Request Arguments: None
-- Returns: An object with a single key, `actors`, that contains an object of `id: category_string` key: value pairs and a list of questions.
-- Sample: `curl -i -H "Content-Type: application/json" -H "Authorization: Bearer {INSERT_TOKEN_HERE}" http://127.0.0.1:5000/actors`
+- Fetches a dictionary of actors in which the keys are the ids and the value is the corresponding string of the actors.  
+- Returns: An object with a single key, `actors`, that contains a list of actors their name, age, gender and a success value
+- Sample: `curl -X GET -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/actors -H "Authorization: $ACTORS_TOKEN"               `
 ```json
+{
+  "actors":[
+      {"age":"60","gender":"M","id":1,"name":"Michael Bay"},
+      {"age":"20","gender":"F","id":2,"name":"Eve Witz"},
+      {"age":"25","gender":"M","id":3,"name":"Harry Potter"}],
+      "success":true
+}
 
 ```
 
 #### POST /movies
 - General:
-    - Creates a new movie using the submitted movie. Returns the id of the created movie, success value to update the frontend.
-- Sample: ``
+    - Creates a new movie using the submitted movie. Returns the id of the created movie and the success value.
+- Sample: `curl -X POST -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/movies -H "Authorization: $MOVIES_TOKEN" --data-raw '{ "title": "Kong Skull Island", "release_year": "2020-01-01"}'`
 ```
 {
-  "created": 25, 
+  "movie": 1, 
   "success": true
 }
 ```
-#### POST /actors
+#### POST /actors/create
 - General:
-    - Creates a new actor using the submitted actor. Returns the id of the created actor, success value to update the frontend.
-- Sample: `curl http://127.0.0.1:5000/actors -X POST -H "Content-Type: application/json" -d '{"name":"Hmm", "age":"18", gender: "M"}'`
+    - Creates a new actor using the submitted actor. Returns the id of the created actor and the success value.
+- Sample: `curl -X POST -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/actors/create -H "Authorization: $ACTORS_TOKEN" --data-raw '{"name": "Michael Bay", "age": "60", "gender": "M"}'`
 ```
 {
-  "created": 25, 
-  "success": true
+  "created_actor_id":1,
+  "success":true
 }
 ```
 #### DELETE /movies/{movie_id}
 - General:
-    - Deletes the movie of the given ID if it exists. Returns the id of the deleted question, success value to update the frontend.
-- Sample: `curl -X DELETE http://127.0.0.1:5000/movies/11`
-```
-{
-  "deleted": 11, 
-  "success": true
-}
-```
-
-#### DELETE /actors/{actor_id}
-- General:
-    - Deletes the actor of the given ID if it exists. Returns the id of the deleted question, success value to update the frontend.
-- Sample: `curl -X DELETE http://127.0.0.1:5000/acctors/1`
+    - Deletes the movie of the given ID if it exists. Returns the id of the deleted question and the success value.
+- Sample: `curl -X DELETE -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/movies/1 -H "Authorization: $MOVIES_TOKEN"`
 ```
 {
   "deleted": 1, 
   "success": true
 }
 ```
+
+#### DELETE /actors/{actor_id}
+- General:
+    - Deletes the actor of the given ID if it exists. Returns the id of the deleted question and the success value.
+- Sample: `curl -X DELETE -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/actors/1 -H "Authorization: $ACTORS_TOKEN"`
+```
+{
+  "deleted": 1, 
+  "success": true
+}
+```
+
+#### PATCH /movies/{movie_id}
+- General:
+    - Updates the movie of the given ID if it exists. Returns the id of the updated movie and the success value.
+- Sample: `curl -X PATCH https://cd0044-full-stack-web-developer.onrender.com/movies/2 -H "Authorization: $MOVIES_TOKEN" --data-raw '{ 'title': 'Dune', 'release_year': '2020-01-01'}'`
+```
+{
+  "success": true,
+  'movie': 2,
+}
+``` 
