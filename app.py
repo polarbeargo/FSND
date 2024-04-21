@@ -102,7 +102,7 @@ def create_app(test_config=None):
 
             return jsonify({
                 'success': True,
-                'movie': movie.id
+                'movie': movie_id
             }), 200
 
         except Exception as e:
