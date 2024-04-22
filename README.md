@@ -1,10 +1,10 @@
 # Full Stack Web Developer Nanodegree Capstone
 
-This is the capstone project for the Udacity Full Stack Web Developer Nanodegree. The project is a simple casting agency that allows users to view, create, update, and delete actors and movies. The project is hosted on Render and can be accessed [here](https://cd0044-full-stack-web-developer.onrender.com/).
+This is the capstone project for the Udacity Full Stack Web Developer Nanodegree. The project is a simple casting agency that allows users to create, update, and delete actors and movies. The project is hosted on Render and can be accessed [here](https://cd0044-full-stack-web-developer.onrender.com/).
 
 ## Environment Setup
 
-- From the heroku_sample folder run
+- In the project folder run
 
 ```bash
 # Mac users
@@ -102,7 +102,7 @@ https://dev-2rphxhqkvfsgcgle.us.auth0.com/authorize?audience=capstone&response_t
 
 ### Getting Started
 - Base URL: At present this app can only be run locally and is not hosted as a base URL. The backend app is hosted at the default, `http://127.0.0.1:5000/`. 
-- Authentication: We have implemented Auth0 for authentication. The tokens are provided in the [setup.sh](projects/capstone/heroku_sample/setup.sh) file.
+- Authentication: We have implemented Auth0 for authentication. The tokens are provided in the [setup.sh](setup.sh) file.
 
 ### Error Handling
 Errors are returned as JSON objects in the following format:
@@ -136,7 +136,7 @@ The API will return the following error types when requests fail:
 
 ``` 
 #### GET /actors
-- Fetches a dictionary of actors in which the keys are the ids and the value is the corresponding string of the actors.  
+- Fetches a dictionary of actors.
 - Returns: An object with a single key, `actors`, that contains a list of actors their name, age, gender and a success value
 - Sample: `curl -X GET -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/actors -H "Authorization: $ACTORS_TOKEN"               `
 ```json
@@ -172,7 +172,7 @@ The API will return the following error types when requests fail:
 ```
 #### DELETE /movies/{movie_id}
 - General:
-    - Deletes the movie of the given ID if it exists. Returns the id of the deleted question and the success value.
+    - Deletes the movie of the given ID if it exists. Returns the id of the deleted movie and the success value.
 - Sample: `curl -X DELETE -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/movies/1 -H "Authorization: $MOVIES_TOKEN"`
 ```
 {
@@ -183,7 +183,7 @@ The API will return the following error types when requests fail:
 
 #### DELETE /actors/{actor_id}
 - General:
-    - Deletes the actor of the given ID if it exists. Returns the id of the deleted question and the success value.
+    - Deletes the actor of the given ID if it exists. Returns the id of the deleted actor and the success value.
 - Sample: `curl -X DELETE -H "Content-Type: application/json" https://cd0044-full-stack-web-developer.onrender.com/actors/1 -H "Authorization: $ACTORS_TOKEN"`
 ```
 {
